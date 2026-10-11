@@ -1,0 +1,44 @@
+:root {
+  --air-blue: #1a56db;
+  --air-dark: #0f2a5a;
+}
+html, body, #app {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f5f7fb;
+}
+.page-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.hero {
+  background: linear-gradient(135deg, #0f2a5a, #1a56db 55%, #3b82f6);
+  color: #fff;
+  padding: 48px 24px 56px;
+}
+.hero h1 { margin: 0 0 8px; font-size: 32px; }
+.hero p { margin: 0 0 24px; opacity: .9; }
+.search-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 16px 40px rgba(15, 42, 90, .18);
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(15, 42, 90, .06);
+}
+.stat-card .label { color: #64748b; font-size: 13px; }
+.stat-card .value { font-size: 26px; font-weight: 700; color: #0f2a5a; margin-top: 8px; }
+@media (max-width: 900px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
