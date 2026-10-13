@@ -5,6 +5,7 @@ import com.airline.ticket.common.PageResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -95,12 +96,18 @@ public class FlightService {
         return toVO(flight);
     }
 
+    @Transactional
     public FlightVO update(Long id, FlightSaveReq req) {
         Flight flight = requireFlight(id);
         apply(flight, req);
+        // Bookings adjust inventory before inserting tickets (which take a shared
+        // lock on the flight row for the FK). Keep the same lock order here to
+        // avoid an inventory/flight lock cycle.
+        FlightInventory economy = prepareInventoryUpdate(id, "ECONOMY", req.economyPrice(), req.economySeats());
+        FlightInventory business = prepareInventoryUpdate(id, "BUSINESS", req.businessPrice(), req.businessSeats());
+        if (economy != null) inventoryMapper.updateById(economy);
+        if (business != null) inventoryMapper.updateById(business);
         flightMapper.updateById(flight);
-        updateInventory(id, "ECONOMY", req.economyPrice(), req.economySeats());
-        updateInventory(id, "BUSINESS", req.businessPrice(), req.businessSeats());
         return toVO(flight);
     }
 
@@ -157,20 +164,28 @@ public class FlightService {
         inventoryMapper.insert(inventory);
     }
 
-    private void updateInventory(Long flightId, String cabin, BigDecimal price, Integer seats) {
+    private FlightInventory prepareInventoryUpdate(Long flightId, String cabin, BigDecimal price, Integer seats) {
         if (price == null && seats == null) {
-            return;
+            return null;
         }
-        FlightInventory inventory = requireInventory(flightId, cabin);
+        // Always lock the current row, including price-only edits, so this update
+        // cannot write an available-seat count read before a concurrent booking/refund.
+        FlightInventory inventory = inventoryMapper.selectForUpdate(flightId, cabin);
+        if (inventory == null) {
+            throw new BusinessException("舱位不存在");
+        }
         if (price != null) {
             inventory.setPrice(price);
         }
         if (seats != null) {
             int sold = inventory.getTotalSeats() - inventory.getAvailableSeats();
+            if (seats < sold) {
+                throw new BusinessException("总座位数不能少于已售座位数");
+            }
             inventory.setTotalSeats(seats);
-            inventory.setAvailableSeats(Math.max(0, seats - sold));
+            inventory.setAvailableSeats(seats - sold);
         }
-        inventoryMapper.updateById(inventory);
+        return inventory;
     }
 
     private FlightVO toVO(Flight flight) {
