@@ -35,7 +35,8 @@ mybatis-plus:
 
 app:
   jwt:
-    secret: ${APP_JWT_SECRET:airline-ticket-system-demo-secret-key-please-change-32b}
+    # 不提供可用的默认密钥；未设置时启动失败。
+    secret: ${APP_JWT_SECRET:}
     expire-hours: 12
   order:
     pay-timeout-minutes: 15

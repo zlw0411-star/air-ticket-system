@@ -21,10 +21,18 @@ air-ticket-system
 
 ## 环境要求
 
-- JDK 17（本仓库默认路径：`E:\JDK17\jdk-17.0.20.1+1`）
-- Maven 3.9+（默认路径：`E:\Maven\apache-maven-3.9.9`）
-- MySQL 8（默认路径：`E:\MySQL\mysql-8.0.39-winx64`）
+- JDK 17，通过 `JAVA_HOME` 指定
+- Maven 3.9+，通过 `MAVEN_HOME` 指定
+- MySQL 8，默认连接 `localhost:3306`，可用 `DB_*` 环境变量覆盖
 - Node.js 20+
+
+仓库不保存本机绝对路径。启动脚本会检查 `JAVA_HOME`、`MAVEN_HOME`、`APP_JWT_SECRET`，缺失时直接报错退出。
+
+**JWT 密钥必须自行提供**，仓库不提供可用的默认值：
+
+```powershell
+$env:APP_JWT_SECRET = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Max 256 }))
+```
 
 ## 启动步骤
 
@@ -48,12 +56,11 @@ DB_PASSWORD=
 .\start-backend.ps1
 ```
 
-或手动指定 JDK 后启动：
+或手动启动（需已设置 `JAVA_HOME` 与 `MAVEN_HOME`）：
 
 ```powershell
-$env:JAVA_HOME = "E:\JDK17\jdk-17.0.20.1+1"
 cd backend
-& "E:\Maven\apache-maven-3.9.9\bin\mvn.cmd" spring-boot:run
+& "$env:MAVEN_HOME\bin\mvn.cmd" spring-boot:run
 ```
 
 后端地址：http://localhost:8080

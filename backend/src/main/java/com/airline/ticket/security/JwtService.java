@@ -20,7 +20,16 @@ public class JwtService {
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expire-hours}") long expireHours) {
-        this.key = Keys.hmacShaKeyFor(pad(secret).getBytes(StandardCharsets.UTF_8));
+        String value = secret == null ? "" : secret.strip();
+        if (value.isEmpty()) {
+            throw new IllegalStateException(
+                    "缺少 app.jwt.secret / APP_JWT_SECRET：请通过环境变量提供本机私有密钥，仓库不提供密钥默认值。");
+        }
+        if (value.contains("change-me") || value.contains("please-change")) {
+            throw new IllegalStateException(
+                    "app.jwt.secret / APP_JWT_SECRET 仍在用例占位值，请替换为本机随机密钥。");
+        }
+        this.key = Keys.hmacShaKeyFor(pad(value).getBytes(StandardCharsets.UTF_8));
         this.expireMillis = expireHours * 3600_000L;
     }
 
