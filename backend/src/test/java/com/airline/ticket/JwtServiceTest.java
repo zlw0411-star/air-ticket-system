@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class JwtServiceTest {
     @Test
     void generateAndParse() {
-        JwtService jwtService = new JwtService("airline-ticket-system-demo-secret-key-please-change-32b", 12);
+        JwtService jwtService = new JwtService("unit-test-only-secret-key-not-for-runtime-use", 12);
         SysUser user = new SysUser();
         user.setId(1L);
         user.setUsername("admin");
